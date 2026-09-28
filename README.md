@@ -1,59 +1,124 @@
-# Frontend
+# pack-rat-frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.7.
+Angular frontend for **Pack-Rat**, a personal collection tracker for tabletop and trading card game collectors whose niche sets, regional exclusives and lesser-known products don't show up in mainstream apps.
 
-## Development server
+This is one of three repositories:
 
-To start a local development server, run:
+| Repository | Contents |
+|---|---|
+| [pack-rat-docs](https://github.com/MarcoSchoch1/pack-rat-docs) | Project overview, architecture decision records, API and UI design, issue board |
+| [pack-rat-backend](https://github.com/MarcoSchoch1/pack-rat-backend) | Spring Boot REST API and PostgreSQL |
+| **pack-rat-frontend** | This repo: Angular single-page app |
 
-```bash
-ng serve
-```
+## Tech stack
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- **Angular 22**: standalone components, signals, functional interceptors
+- **Tailwind CSS 4** for styling ([ADR-011](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md#adr-011-use-tailwind-css-instead-of-a-component-library-eg-angular-material))
+- **Vitest** with jsdom for unit tests
+- **Prettier** for formatting
 
-## Code scaffolding
+## Getting started
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Requirements
 
-```bash
-ng generate component component-name
-```
+- Node.js `^22.22.3`, `^24.15.0` or `>=26.0.0` (required by Angular 22)
+- The [backend](https://github.com/MarcoSchoch1/pack-rat-backend) running on `http://localhost:8080`
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+### Run locally
 
 ```bash
-ng build
+npm install
+npm start
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Open `http://localhost:4200`. The app reloads on file changes.
 
-## Running unit tests
+The development build calls the backend directly at `http://localhost:8080/api`. There is no dev-server proxy; the backend allows `http://localhost:4200` through its CORS configuration ([ADR-016](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md#adr-016-explicit-cors-configuration-via-spring-security-not-a-reverse-proxy-workaround)). If you serve on a different port, add that origin to the backend's `app.cors.allowed-origins`.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### Scripts
+
+| Command | Description |
+|---|---|
+| `npm start` | Dev server with the development environment |
+| `npm run build` | Production build into `dist/frontend` |
+| `npm run watch` | Development build in watch mode |
+| `npm test` | Unit tests (Vitest) |
+
+## Configuration
+
+The backend URL is set per build in `src/environments/`:
+
+| File | Used by | `apiUrl` |
+|---|---|---|
+| `environment.development.ts` | `ng serve`, development builds | `http://localhost:8080/api` |
+| `environment.ts` | Production builds | Deployed backend URL |
+
+`angular.json` swaps the development file in through `fileReplacements`. No secrets belong in these files, since everything in them ships to the browser.
+
+## Architecture
+
+```
+src/app/
+├── interceptor/
+│   └── auth.interceptor.ts   Attaches the JWT, logs out on 401
+├── service/
+│   ├── apiservice.ts         Single entry point for backend calls
+│   └── auth.service.ts       Login, logout, token storage
+├── testing/
+│   └── fake-jwt.ts           Test helper for building JWTs
+├── app.config.ts             Providers: router, HttpClient, interceptors
+└── app.routes.ts             Route definitions
+```
+
+### Backend communication
+
+All HTTP calls go through `ApiService`, never through `HttpClient` directly:
+
+```ts
+private readonly api = inject(ApiService);
+
+collections$ = this.api.get<Collection[]>('collections');
+```
+
+- Paths are relative to the configured `apiUrl`.
+- Every failed request becomes an `ApiError` with `status`, `code`, `message` and `field`, matching the backend's [error format](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/backend/api-design.md#error-handling). Network failures use the code `NETWORK_ERROR`.
+- Components never handle `HttpErrorResponse`.
+
+### Authentication
+
+The backend issues a stateless JWT on `POST /api/auth/login` ([ADR-007](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md#adr-007-jwt-for-authentication-instead-of-server-side-sessions)).
+
+- `AuthService` stores the token in `localStorage` and checks its `exp` claim before each use. A token is treated as expired 10 seconds early so it can't expire in transit.
+- `authInterceptor` adds `Authorization: Bearer <token>` to requests aimed at the backend's `apiUrl`. The token is never sent to other hosts.
+- When the backend answers a request that carried a token with 401, the interceptor clears the token and redirects to `/login`.
+
+**Known trade-offs:**
+
+- A token in `localStorage` can be read by any script that runs on the page, so an XSS vulnerability would expose it. An httpOnly cookie would avoid this but requires a different backend auth design.
+- There is no refresh token. Sessions end when the token expires (1 hour), and the user logs in again.
+
+## Testing
 
 ```bash
-ng test
+npm test
 ```
 
-## Running end-to-end tests
+Specs sit next to the code they test (`*.spec.ts`). HTTP behavior is tested with `HttpTestingController`, without a running backend.
 
-For end-to-end (e2e) testing, run:
+`vitest-base.config.mts` starts test workers with `--no-experimental-webstorage`. Node 25 and later ship their own global `localStorage`, which replaces jsdom's and is undefined unless Node is started with a storage file.
 
-```bash
-ng e2e
-```
+## Conventions
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+- Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and reference the issue number, e.g. `feat: add item form #5`.
+- Formatting is handled by Prettier (`.prettierrc`: 100 columns, single quotes).
+- New issues are added to the [project board](https://github.com/users/MarcoSchoch1/projects/1) automatically by `.github/workflows/add-to-project.yml`.
 
-## Additional Resources
+## Status
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Early development. The HTTP and authentication foundation is in place. Screens ([UI design](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/frontend/ui-design.md)) are next:
+
+- [x] API service, JWT authentication, error handling
+- [ ] Login
+- [ ] Collection dashboard
+- [ ] Add item form with image upload
+- [ ] Item detail
