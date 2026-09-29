@@ -1,11 +1,21 @@
-import { Component } from '@angular/core';
 import { Routes } from '@angular/router';
+import { Login } from './login/login';
+import { Dashboard } from './dashboard/dashboard';
+import { AddItem } from './add-item/add-item';
+import { ItemDetail } from './item-detail/item-detail';
+import { authGuard } from './service/auth-guard';
 
 export const routes: Routes = [
-    //TODO add components to routes
-    { path: 'login', component: Component},
-    { path: '', component: Component},
-    { path: 'items/new', component: Component},
-    { path: 'items:id', component: Component},
+    { path: 'login', component: Login },
+    {
+        path: '',
+        canActivateChild: [authGuard],
+        children: [
+        { path: '', component: Dashboard },
+        { path: 'items/new', component: AddItem },
+        { path: 'items/:id', component: ItemDetail },
+        ],
+    },
+    { path: '**', redirectTo: '' }
 
 ];

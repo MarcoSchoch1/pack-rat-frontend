@@ -1,0 +1,46 @@
+<main class="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="w-full max-w-xs rounded-2xl border border-slate-200 bg-white p-7">
+    <div class="mb-6 flex flex-col items-center">
+      <div
+        class="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-2xl text-indigo-600"
+        aria-hidden="true"
+      >
+        ☰
+      </div>
+      <h1 class="text-lg font-bold text-slate-900">Pack-Rat</h1>
+      <p class="text-sm text-slate-400">Track your collection</p>
+    </div>
+
+    <label for="username" class="mb-1 block text-sm text-slate-600">Username</label>
+    <input
+      id="username"
+      formControlName="username"
+      type="text"
+      autocomplete="username"
+      placeholder="username"
+      class="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none"
+    />
+
+    <label for="password" class="mb-1 block text-sm text-slate-600">Password</label>
+    <input
+      id="password"
+      formControlName="password"
+      type="password"
+      autocomplete="current-password"
+      placeholder="••••••••"
+      class="mb-6 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-300 focus:border-indigo-500 focus:outline-none"
+    />
+
+    @if (error()) {
+    <p class="mb-4 text-sm text-red-600" role="alert">{{ error() }}</p>
+    }
+
+    <button
+      type="submit"
+      [disabled]="form.invalid || submitting()"
+      class="w-full rounded-lg bg-indigo-600 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+    >
+      Log in
+    </button>
+  </form>
+</main>
