@@ -1,0 +1,130 @@
+<main class="flex min-h-screen justify-center bg-slate-50 p-4 sm:p-8">
+  <form
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    class="w-full max-w-sm self-start rounded-2xl border border-slate-200 bg-white p-6"
+  >
+    <h1 class="mb-5 text-xl font-bold text-slate-900">Add item</h1>
+
+    <label for="name" class="mb-1 block text-sm text-slate-700">Name</label>
+    <input
+      id="name"
+      formControlName="name"
+      type="text"
+      placeholder="OP01 Monkey D. Luffy Alt Art"
+      class="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
+    />
+
+    <div class="mb-4 flex gap-3">
+      <div class="flex-1">
+        <label for="pricePaid" class="mb-1 block text-sm text-slate-700">Price paid</label>
+        <input
+          id="pricePaid"
+          formControlName="pricePaid"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="45.00"
+          class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
+        />
+      </div>
+      <div class="w-24">
+        <label for="currency" class="mb-1 block text-sm text-slate-700">Currency</label>
+        <select
+          id="currency"
+          formControlName="currency"
+          class="w-full rounded-lg border border-slate-300 px-2 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+        >
+          @for (currency of currencies; track currency) {
+            <option [value]="currency">{{ currency }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <label for="priceNow" class="mb-1 block text-sm text-slate-700">
+      Current price <span class="text-xs text-slate-400">(optional)</span>
+    </label>
+    <input
+      id="priceNow"
+      formControlName="priceNow"
+      type="number"
+      step="0.01"
+      min="0"
+      placeholder="980.00"
+      class="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
+    />
+
+    <label for="dateAcquired" class="mb-1 block text-sm text-slate-700">Date acquired</label>
+    <input
+      id="dateAcquired"
+      formControlName="dateAcquired"
+      type="date"
+      class="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+    />
+
+    <label for="condition" class="mb-1 block text-sm text-slate-700">Condition</label>
+    <select
+      id="condition"
+      formControlName="condition"
+      class="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
+    >
+      @for (condition of conditions; track condition[0]) {
+        <option [value]="condition[0]">{{ condition[1] }}</option>
+      }
+    </select>
+
+    <label for="marketPlaceLink" class="mb-1 block text-sm text-slate-700">Marketplace link</label>
+    <input
+      id="marketPlaceLink"
+      formControlName="marketPlaceLink"
+      type="url"
+      placeholder="https://www.tcgplayer.com/..."
+      class="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
+    />
+
+    <span class="mb-1 block text-sm text-slate-700">Picture</span>
+    <label
+      for="picture"
+      class="mb-6 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 py-8 text-sm text-slate-500 hover:border-indigo-400"
+      (dragover)="$event.preventDefault()"
+      (drop)="$event.preventDefault(); pickPicture($event.dataTransfer?.files)"
+    >
+      @if (picture(); as picture) {
+        <span class="font-medium text-slate-700">{{ picture.name }}</span>
+        <span class="text-xs">Click or drop to replace</span>
+      } @else {
+        <span aria-hidden="true">↑</span>
+        Click to upload or drag and drop
+      }
+      <input
+        #fileInput
+        id="picture"
+        type="file"
+        accept="image/*"
+        class="sr-only"
+        (change)="pickPicture(fileInput.files)"
+      />
+    </label>
+
+    @if (error()) {
+      <p class="mb-4 text-sm text-red-600" role="alert">{{ error() }}</p>
+    }
+
+    <div class="flex gap-3">
+      <a
+        routerLink="/"
+        class="flex-1 rounded-lg border border-slate-300 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+      >
+        Cancel
+      </a>
+      <button
+        type="submit"
+        [disabled]="submitting()"
+        class="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+      >
+        Save item
+      </button>
+    </div>
+  </form>
+</main>

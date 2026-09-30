@@ -45,11 +45,16 @@
             [routerLink]="['/items', item.id]"
             class="block overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-indigo-300"
           >
-            <div
-              class="flex aspect-square items-center justify-center bg-slate-100 text-2xl text-slate-300"
-            >
-              🖼
-            </div>
+            @if (thumbnails()[item.id]; as src) {
+              <!-- The name is right below, so the picture needs no alt text of its own. -->
+              <img [src]="src" alt="" loading="lazy" class="aspect-square w-full object-cover" />
+            } @else {
+              <div
+                class="flex aspect-square items-center justify-center bg-slate-100 text-2xl text-slate-300"
+              >
+                🖼
+              </div>
+            }
             <div class="p-3">
               <p class="text-sm font-bold text-slate-900">{{ item.name }}</p>
               <p class="text-xs text-slate-500">{{ item.pricePaid | currency: item.currency }}</p>

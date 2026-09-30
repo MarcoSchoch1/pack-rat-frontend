@@ -1,0 +1,4 @@
+/* Angular adds these classes itself; submit() marks every field touched so empty required ones light up. */
+.ng-touched.ng-invalid {
+  border-color: var(--color-red-400, #f87171);
+}

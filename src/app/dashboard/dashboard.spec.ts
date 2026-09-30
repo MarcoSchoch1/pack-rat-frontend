@@ -40,7 +40,13 @@ describe('Dashboard', () => {
       { id: 'i1', name: 'Luffy Alt Art', pricePaid: 45, priceNow: null, currency: 'CHF' },
       { id: 'i2', name: 'Zoro OP04', pricePaid: 100, priceNow: 200, currency: 'EUR' },
     ]);
+    httpMock.expectOne(`${BASE_URL}/items/i1/images`).flush([{ id: 'img1', itemId: 'i1' }]);
+    httpMock.expectOne(`${BASE_URL}/items/i2/images`).flush([]);
     await fixture.whenStable();
+
+    const images = (fixture.nativeElement as HTMLElement).querySelectorAll('img');
+    expect(images.length).toBe(1);
+    expect(images[0].getAttribute('src')).toBe(`${BASE_URL}/images/img1`);
 
     const text = (fixture.nativeElement as HTMLElement).textContent;
     expect(text).toContain('One Piece');
