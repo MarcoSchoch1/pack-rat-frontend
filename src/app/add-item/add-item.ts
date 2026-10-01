@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
@@ -24,7 +25,8 @@ export class AddItem {
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
-    pricePaid: [null as number | null, [Validators.required, Validators.min(0.01)]],
+    selfPulled: [false as boolean | null],
+    pricePaid: [null as number | null, [Validators.required, Validators.min(0.0)]],
     currency: ['CHF' as Currency, Validators.required],
     priceNow: [null as number | null, Validators.min(0)],
     dateAcquired: ['', Validators.required],
@@ -34,6 +36,19 @@ export class AddItem {
   protected readonly picture = signal<File | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly submitting = signal(false);
+
+  constructor() {
+    // A self-pulled card cost nothing; getRawValue() still includes the disabled 0.
+    const pricePaid = this.form.controls.pricePaid;
+    this.form.controls.selfPulled.valueChanges.pipe(takeUntilDestroyed()).subscribe((pulled) => {
+      if (pulled) {
+        pricePaid.setValue(0);
+        pricePaid.disable();
+      } else {
+        pricePaid.enable();
+      }
+    });
+  }
 
   /** Used by both the file input and drag and drop; `accept` doesn't apply to drops, so check the type here. */
   protected pickPicture(files: FileList | null | undefined): void {
