@@ -16,6 +16,7 @@ export const routes: Routes = [
         { path: '', component: Dashboard },
         { path: 'items/new', component: AddItem },
         { path: 'items/:id', component: ItemDetail },
+        { path: 'items/:id/edit', component: AddItem },
         ],
     },
     { path: '**', redirectTo: '' }

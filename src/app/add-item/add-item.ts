@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { CollectionService } from '../service/collection.service';
 import { CONDITIONS, CURRENCIES, Condition, Currency, ItemService } from '../service/item.service';
@@ -20,12 +20,15 @@ export class AddItem {
   private readonly items = inject(ItemService);
   private readonly router = inject(Router);
 
+  /** Set on `items/:id/edit`; the same form then edits that item instead of adding one. */
+  protected readonly itemId = inject(ActivatedRoute).snapshot.paramMap.get('id');
+
   protected readonly currencies = CURRENCIES;
   protected readonly conditions = Object.entries(CONDITIONS) as [Condition, string][];
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
-    selfPulled: [false as boolean | null],
+    selfPulled: [false],
     pricePaid: [null as number | null, [Validators.required, Validators.min(0.0)]],
     currency: ['CHF' as Currency, Validators.required],
     priceNow: [null as number | null, Validators.min(0)],
@@ -48,6 +51,13 @@ export class AddItem {
         pricePaid.enable();
       }
     });
+
+    if (this.itemId) {
+      this.items.get(this.itemId).subscribe({
+        next: (item) => this.form.patchValue(item),
+        error: () => this.error.set('Loading the item failed'),
+      });
+    }
   }
 
   /** Used by both the file input and drag and drop; `accept` doesn't apply to drops, so check the type here. */
@@ -77,22 +87,25 @@ export class AddItem {
     const { pricePaid, ...rest } = this.form.getRawValue();
     const picture = this.picture();
 
-    this.collections
-      .list()
+    const request = { ...rest, pricePaid: pricePaid! };
+    const itemId = this.itemId;
+    const save = itemId
+      ? this.items.update(itemId, request)
+      : this.collections.list().pipe(switchMap(([collection]) => this.items.create(collection.id, request)));
+    const done = itemId ? `/items/${itemId}` : '/';
+
+    save
       .pipe(
-        switchMap(([collection]) =>
-          this.items.create(collection.id, { ...rest, pricePaid: pricePaid! }),
-        ),
         // The picture is a separate call (ADR-008), and it needs the new item's id.
         // If only the upload fails the item already exists, so go to its page to add the picture
         // there instead of staying here, where another save would create a duplicate.
         switchMap((item) =>
           picture
             ? this.items.uploadImage(item.id, picture).pipe(
-                map(() => '/'),
+                map(() => done),
                 catchError(() => of(`/items/${item.id}`)),
               )
-            : of('/'),
+            : of(done),
         ),
       )
       .subscribe({

@@ -1,0 +1,113 @@
+<main class="flex min-h-screen justify-center bg-slate-50 p-4 sm:p-8">
+  <div class="w-full max-w-sm">
+    <a routerLink="/" class="mb-4 inline-block text-sm text-slate-500 hover:text-slate-700">
+      ← Back to collection
+    </a>
+
+    @if (error()) {
+      <p class="mb-4 text-sm text-red-600" role="alert">{{ error() }}</p>
+    }
+
+    @if (item(); as item) {
+      <article class="rounded-2xl border border-slate-200 bg-white p-5">
+        @if (images()[selected()]; as image) {
+          <img
+            [src]="itemService.imageUrl(image.id)"
+            [alt]="item.name"
+            class="mb-2 aspect-square w-full rounded-lg object-cover"
+          />
+        }
+
+        <div class="mb-4 grid grid-cols-3 gap-2">
+          @for (image of images(); track image.id; let i = $index) {
+            <button
+              type="button"
+              [attr.aria-label]="'Show picture ' + (i + 1)"
+              (click)="selected.set(i)"
+              class="overflow-hidden rounded-lg border-2"
+              [class.border-indigo-500]="i === selected()"
+              [class.border-transparent]="i !== selected()"
+            >
+              <img [src]="itemService.imageUrl(image.id)" alt="" class="aspect-square w-full object-cover" />
+            </button>
+          }
+          <label
+            for="picture"
+            aria-label="Add picture"
+            class="flex aspect-square cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-xl text-slate-400 hover:border-indigo-400"
+          >
+            +
+            <input
+              #fileInput
+              id="picture"
+              type="file"
+              accept="image/*"
+              class="sr-only"
+              (change)="addPicture(fileInput.files); fileInput.value = ''"
+            />
+          </label>
+        </div>
+
+        <h1 class="text-lg font-bold text-slate-900">{{ item.name }}</h1>
+        @if (item.marketPlaceLink) {
+          <a
+            [href]="item.marketPlaceLink"
+            target="_blank"
+            rel="noopener"
+            class="text-sm text-indigo-600 hover:underline"
+          >
+            View on marketplace ↗
+          </a>
+        }
+
+        <dl class="mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
+          <div class="flex justify-between py-2">
+            <dt class="text-slate-500">Price paid</dt>
+            <dd class="font-semibold text-slate-900">
+              @if (item.selfPulled) {
+                Self pulled
+              } @else {
+                {{ item.pricePaid | currency: item.currency }}
+              }
+            </dd>
+          </div>
+          <div class="flex justify-between py-2">
+            <dt class="text-slate-500">Current price</dt>
+            <dd class="font-semibold text-slate-900">
+              {{ item.priceNow === null ? '—' : (item.priceNow | currency: item.currency) }}
+            </dd>
+          </div>
+          <div class="flex justify-between py-2">
+            <dt class="text-slate-500">Date acquired</dt>
+            <dd class="font-semibold text-slate-900">{{ item.dateAcquired | date: 'd MMM y' }}</dd>
+          </div>
+          <div class="flex justify-between py-2">
+            <dt class="text-slate-500">Condition</dt>
+            <dd class="font-semibold text-slate-900">{{ conditions[item.condition] }}</dd>
+          </div>
+          <div class="flex justify-between py-2">
+            <dt class="text-slate-500">Added</dt>
+            <dd class="font-semibold text-slate-900">{{ item.createdAt | date: 'd MMM y' }}</dd>
+          </div>
+        </dl>
+
+        <div class="mt-5 flex gap-3">
+          <a
+            routerLink="edit"
+            class="flex-1 rounded-lg border border-slate-300 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Edit
+          </a>
+          <button
+            type="button"
+            (click)="deleteItem()"
+            [disabled]="deleting()"
+            class="flex-1 rounded-lg border border-red-200 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            Delete
+          </button>
+        </div>
+      </article>
+    }
+  </div>
+</main>

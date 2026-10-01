@@ -4,7 +4,7 @@
     (ngSubmit)="submit()"
     class="w-full max-w-sm self-start rounded-2xl border border-slate-200 bg-white p-6"
   >
-    <h1 class="mb-5 text-xl font-bold text-slate-900">Add item</h1>
+    <h1 class="mb-5 text-xl font-bold text-slate-900">{{ itemId ? 'Edit item' : 'Add item' }}</h1>
 
     <label for="name" class="mb-1 block text-sm text-slate-700">Name</label>
     <input
@@ -123,7 +123,7 @@
 
     <div class="flex gap-3">
       <a
-        routerLink="/"
+        [routerLink]="itemId ? ['/items', itemId] : '/'"
         class="flex-1 rounded-lg border border-slate-300 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
       >
         Cancel

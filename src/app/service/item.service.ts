@@ -23,6 +23,7 @@ export interface Item {
   id: string;
   collectionId: string;
   name: string;
+  selfPulled: boolean;
   pricePaid: number;
   priceNow: number | null;
   currency: Currency;
@@ -36,6 +37,7 @@ export interface Item {
 /** Mirrors the backend's ItemRequest. dateAcquired is `yyyy-mm-dd`, which is what `<input type="date">` gives. */
 export interface ItemRequest {
   name: string;
+  selfPulled: boolean;
   pricePaid: number;
   priceNow: number | null;
   currency: Currency;
@@ -62,6 +64,20 @@ export class ItemService {
 
   create(collectionId: string, request: ItemRequest): Observable<Item> {
     return this.api.post<Item>(`collections/${collectionId}/items`, request);
+  }
+
+  get(itemId: string): Observable<Item> {
+    return this.api.get<Item>(`items/${itemId}`);
+  }
+
+  /** The backend PATCHes: a null field keeps its old value. */
+  update(itemId: string, request: ItemRequest): Observable<Item> {
+    return this.api.patch<Item>(`items/${itemId}`, request);
+  }
+
+  /** The backend deletes the item's pictures with it. */
+  delete(itemId: string): Observable<void> {
+    return this.api.delete(`items/${itemId}`);
   }
 
   /** Multipart upload; the backend reads the `file` field and rejects anything over 5 MB. */
