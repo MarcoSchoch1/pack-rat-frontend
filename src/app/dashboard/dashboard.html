@@ -38,12 +38,13 @@
 
     <p class="mb-3 text-sm text-slate-500">{{ items().length }} items</p>
 
-    <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+    <!-- auto-rows-fr: every row is as tall as the tallest tile in the whole list, not just in its own row. -->
+    <ul class="grid auto-rows-fr grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
       @for (item of items(); track item.id) {
         <li>
           <a
             [routerLink]="['/items', item.id]"
-            class="block overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-indigo-300"
+            class="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white hover:border-indigo-300"
           >
             @if (thumbnails()[item.id]; as src) {
               <!-- The name is right below, so the picture needs no alt text of its own. -->
@@ -55,9 +56,9 @@
                 🖼
               </div>
             }
-            <div class="p-3">
+            <div class="flex flex-1 flex-col p-3">
               <p class="text-sm font-bold text-slate-900">{{ item.name }}</p>
-              <p class="text-xs text-slate-500">Paid: {{ item.pricePaid | currency: item.currency }} | Now: {{ item.priceNow | currency: item.currency }}</p>
+              <p class="mt-auto pt-1 text-xs text-slate-500">Paid: {{ item.pricePaid | currency: item.currency }} <br/> Now: {{ (item.priceNow ?? 0.00) | currency: item.currency }}</p>
             </div>
           </a>
         </li>
