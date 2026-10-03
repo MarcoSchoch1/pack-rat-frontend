@@ -6,6 +6,9 @@ import { CONDITIONS, Image, Item, ItemService } from '../service/item.service';
 /** Same limit as the backend's spring.servlet.multipart.max-file-size. */
 const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
 
+/** Same limit as the backend's ImageService.MAX_IMAGES_PER_ITEM. */
+const MAX_PICTURES = 4;
+
 @Component({
   imports: [RouterLink, CurrencyPipe, DatePipe],
   selector: 'app-item-detail',
@@ -18,6 +21,7 @@ export class ItemDetail {
   private readonly itemId = inject(ActivatedRoute).snapshot.paramMap.get('id')!;
 
   protected readonly conditions = CONDITIONS;
+  protected readonly maxPictures = MAX_PICTURES;
   protected readonly item = signal<Item | null>(null);
   protected readonly images = signal<Image[]>([]);
   protected readonly selected = signal(0);
@@ -48,6 +52,18 @@ export class ItemDetail {
         this.selected.set(this.images().length - 1);
       },
       error: () => this.error.set('Uploading the picture failed, try again'),
+    });
+  }
+
+  protected deletePicture(imageId: string): void {
+    this.error.set(null);
+    this.itemService.deleteImage(imageId).subscribe({
+      next: () => {
+        this.images.update((images) => images.filter((image) => image.id !== imageId));
+        // Keep the selection on an existing picture when the last one goes away.
+        this.selected.update((i) => Math.min(i, Math.max(this.images().length - 1, 0)));
+      },
+      error: () => this.error.set('Deleting the picture failed, try again'),
     });
   }
 

@@ -15,7 +15,10 @@
       class="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
     />
 
-    <label for="selfPulled" class="mb-4 flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+    <label
+      for="selfPulled"
+      class="mb-4 flex cursor-pointer items-center gap-2 text-sm text-slate-700"
+    >
       <input
         id="selfPulled"
         formControlName="selfPulled"
@@ -93,29 +96,45 @@
       class="mb-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none"
     />
 
-    <span class="mb-1 block text-sm text-slate-700">Picture</span>
-    <label
-      for="picture"
-      class="mb-6 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 py-8 text-sm text-slate-500 hover:border-indigo-400"
-      (dragover)="$event.preventDefault()"
-      (drop)="$event.preventDefault(); pickPicture($event.dataTransfer?.files)"
-    >
-      @if (picture(); as picture) {
-        <span class="font-medium text-slate-700">{{ picture.name }}</span>
-        <span class="text-xs">Click or drop to replace</span>
-      } @else {
-        <span aria-hidden="true">↑</span>
-        Click to upload or drag and drop
-      }
-      <input
-        #fileInput
-        id="picture"
-        type="file"
-        accept="image/*"
-        class="sr-only"
-        (change)="pickPicture(fileInput.files)"
-      />
-    </label>
+    <!-- Only when adding; an existing item gets more pictures on its detail page. -->
+    @if (!itemId) {
+      <span class="mb-1 block text-sm text-slate-700">Picture</span>
+      <div class="relative mb-6">
+        <label
+          for="picture"
+          class="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 py-8 text-sm text-slate-500 hover:border-indigo-400"
+          (dragover)="$event.preventDefault()"
+          (drop)="$event.preventDefault(); pickPicture($event.dataTransfer?.files)"
+        >
+          @if (picture(); as picture) {
+            <span class="font-medium text-slate-700">{{ picture.name }}</span>
+            <span class="text-xs">Click or drop to replace</span>
+          } @else {
+            <span aria-hidden="true">↑</span>
+            Click to upload or drag and drop
+          }
+          <input
+            #fileInput
+            id="picture"
+            type="file"
+            accept="image/*"
+            class="sr-only"
+            (change)="pickPicture(fileInput.files); fileInput.value = ''"
+          />
+        </label>
+        @if (picture()) {
+          <!-- Outside the label, otherwise the click would also open the file picker. -->
+          <button
+            type="button"
+            aria-label="Remove picture"
+            (click)="picture.set(null)"
+            class="absolute top-2 right-2 flex size-6 items-center justify-center rounded-full bg-slate-100 text-sm text-slate-600 hover:bg-red-50 hover:text-red-600"
+          >
+            ×
+          </button>
+        }
+      </div>
+    }
 
     @if (error()) {
       <p class="mb-4 text-sm text-red-600" role="alert">{{ error() }}</p>

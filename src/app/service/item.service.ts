@@ -87,6 +87,10 @@ export class ItemService {
     return this.api.post<Image>(`items/${itemId}/images`, body);
   }
 
+  deleteImage(imageId: string): Observable<void> {
+    return this.api.delete(`images/${imageId}`);
+  }
+
   images(itemId: string): Observable<Image[]> {
     return this.api.get<Image[]>(`items/${itemId}/images`);
   }
