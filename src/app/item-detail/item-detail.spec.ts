@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
 import { API_BASE_URL } from '../service/apiservice';
 import { ItemDetail } from './item-detail';
 
@@ -40,5 +41,23 @@ describe('ItemDetail', () => {
     del.flush(null, { status: 204, statusText: 'No Content' });
 
     expect(router.navigateByUrl).toHaveBeenCalledWith('/');
+  });
+
+  it('deletes the confirmed picture and closes the dialog', () => {
+    const httpMock = TestBed.inject(HttpTestingController);
+    httpMock.expectOne('http://api.test/api/items/i1/images').flush([
+      { id: 'img1', itemId: 'i1', url: '' },
+      { id: 'img2', itemId: 'i1', url: '' },
+    ]);
+    const dialog = { close: vi.fn() } as unknown as ConfirmDialog;
+
+    component['pictureToDelete'].set({ id: 'img1', itemId: 'i1', url: '' });
+    component['deletePicture'](dialog);
+    httpMock
+      .expectOne({ method: 'DELETE', url: 'http://api.test/api/images/img1' })
+      .flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(component['images']().map((image) => image.id)).toEqual(['img2']);
+    expect(dialog.close).toHaveBeenCalled();
   });
 });

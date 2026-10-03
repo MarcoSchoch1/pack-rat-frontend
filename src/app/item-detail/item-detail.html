@@ -34,7 +34,7 @@
               <button
                 type="button"
                 [attr.aria-label]="'Delete picture ' + (i + 1)"
-                (click)="deletePicture(image.id)"
+                (click)="askDelete(pictureDialog, image)"
                 class="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-white/90 text-sm text-slate-600 shadow hover:bg-red-50 hover:text-red-600"
               >
                 ×
@@ -112,7 +112,7 @@
           </a>
           <button
             type="button"
-            (click)="deleteDialog.showModal()"
+            (click)="askDelete(itemDialog)"
             class="flex-1 rounded-lg border border-red-200 py-2 text-sm font-semibold text-red-600 hover:bg-red-50"
           >
             Delete
@@ -120,43 +120,33 @@
         </div>
       </article>
 
-      <!-- Native <dialog>: showModal() gives the backdrop, focus trap and Escape to close for free. -->
-      <dialog
-        #deleteDialog
-        aria-labelledby="delete-title"
-        (click)="$event.target === deleteDialog && !deleting() && deleteDialog.close()"
-        class="m-auto w-[calc(100%+2rem)] max-w-sm rounded-2xl bg-white backdrop:bg-slate-900/40"
+      <app-confirm-dialog
+        #itemDialog
+        title="Delete item?"
+        [busy]="deleting()"
+        [error]="deleteError()"
+        (confirmed)="deleteItem()"
       >
-        <!-- Padding sits on this div so a click on the dialog element itself can only be the backdrop. -->
-        <div class="p-6">
-          <h2 id="delete-title" class="mb-3 text-center text-lg font-bold text-slate-900">Delete item?</h2>
-          <p class="mb-2 text-center font-semibold break-words text-slate-900">{{ item.name }}</p>
-          <p class="mb-5 text-center text-sm text-slate-600">
-            The item and its pictures will be deleted. <br/>This can't be undone.
-          </p>
-          @if (deleteError()) {
-            <p class="mb-4 text-sm text-red-600" role="alert">{{ deleteError() }}</p>
-          }
-          <div class="flex gap-3">
-            <button
-              type="button"
-              (click)="deleteDialog.close()"
-              [disabled]="deleting()"
-              class="flex-1 rounded-lg border border-slate-300 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              (click)="deleteItem()"
-              [disabled]="deleting()"
-              class="flex-1 rounded-lg bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
-            >
-              {{ deleting() ? 'Deleting…' : 'Delete' }}
-            </button>
-          </div>
-        </div>
-      </dialog>
+        <p class="mb-2 font-semibold break-words text-slate-900">{{ item.name }}</p>
+        The item and its pictures will be deleted. <br />This can't be undone.
+      </app-confirm-dialog>
+
+      <app-confirm-dialog
+        #pictureDialog
+        title="Delete picture?"
+        [busy]="deleting()"
+        [error]="deleteError()"
+        (confirmed)="deletePicture(pictureDialog)"
+      >
+        @if (pictureToDelete(); as picture) {
+          <img
+            [src]="itemService.imageUrl(picture.id)"
+            alt=""
+            class="mx-auto mb-3 size-24 rounded-lg object-cover"
+          />
+        }
+        This can't be undone.
+      </app-confirm-dialog>
     }
   </div>
 </main>

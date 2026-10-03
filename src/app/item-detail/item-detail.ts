@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
 import { CONDITIONS, Image, Item, ItemService } from '../service/item.service';
 
 /** Same limit as the backend's spring.servlet.multipart.max-file-size. */
@@ -10,7 +11,7 @@ const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
 const MAX_PICTURES = 4;
 
 @Component({
-  imports: [RouterLink, CurrencyPipe, DatePipe],
+  imports: [RouterLink, CurrencyPipe, DatePipe, ConfirmDialog],
   selector: 'app-item-detail',
   styleUrl: './item-detail.css',
   templateUrl: './item-detail.html',
@@ -26,8 +27,10 @@ export class ItemDetail {
   protected readonly images = signal<Image[]>([]);
   protected readonly selected = signal(0);
   protected readonly error = signal<string | null>(null);
+  /** Shared by the item and picture dialogs; only one is open at a time. */
   protected readonly deleting = signal(false);
   protected readonly deleteError = signal<string | null>(null);
+  protected readonly pictureToDelete = signal<Image | null>(null);
 
   constructor() {
     this.itemService.get(this.itemId).subscribe({
@@ -55,15 +58,29 @@ export class ItemDetail {
     });
   }
 
-  protected deletePicture(imageId: string): void {
-    this.error.set(null);
-    this.itemService.deleteImage(imageId).subscribe({
+  protected askDelete(dialog: ConfirmDialog, picture: Image | null = null): void {
+    this.pictureToDelete.set(picture);
+    this.deleteError.set(null);
+    dialog.open();
+  }
+
+  protected deletePicture(dialog: ConfirmDialog): void {
+    const picture = this.pictureToDelete();
+    if (!picture || this.deleting()) return;
+    this.deleting.set(true);
+    this.deleteError.set(null);
+    this.itemService.deleteImage(picture.id).subscribe({
       next: () => {
-        this.images.update((images) => images.filter((image) => image.id !== imageId));
+        this.deleting.set(false);
+        dialog.close();
+        this.images.update((images) => images.filter((image) => image.id !== picture.id));
         // Keep the selection on an existing picture when the last one goes away.
         this.selected.update((i) => Math.min(i, Math.max(this.images().length - 1, 0)));
       },
-      error: () => this.error.set('Deleting the picture failed, try again'),
+      error: () => {
+        this.deleting.set(false);
+        this.deleteError.set('Deleting the picture failed, try again');
+      },
     });
   }
 

@@ -1,0 +1,37 @@
+<!-- Native <dialog>: showModal() gives the backdrop, focus trap and Escape to close for free. -->
+<dialog
+  #dialog
+  [attr.aria-labelledby]="titleId"
+  (click)="$event.target === dialog && !busy() && close()"
+  (cancel)="dismiss($event)"
+  class="m-auto w-[calc(100%+2rem)] max-w-sm rounded-2xl bg-white backdrop:bg-slate-900/40"
+>
+  <!-- Padding sits on this div so a click on the dialog element itself can only be the backdrop. -->
+  <div class="p-6">
+    <h2 [id]="titleId" class="mb-3 text-center text-lg font-bold text-slate-900">{{ title() }}</h2>
+    <div class="mb-5 text-center text-sm text-slate-600">
+      <ng-content />
+    </div>
+    @if (error()) {
+      <p class="mb-4 text-sm text-red-600" role="alert">{{ error() }}</p>
+    }
+    <div class="flex gap-3">
+      <button
+        type="button"
+        (click)="close()"
+        [disabled]="busy()"
+        class="flex-1 rounded-lg border border-slate-300 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+      >
+        Cancel
+      </button>
+      <button
+        type="button"
+        (click)="confirmed.emit()"
+        [disabled]="busy()"
+        class="flex-1 rounded-lg bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+      >
+        {{ busy() ? busyLabel() : confirmLabel() }}
+      </button>
+    </div>
+  </div>
+</dialog>
