@@ -30,11 +30,10 @@ describe('ItemDetail', () => {
     expect(component).toBeTruthy();
   });
 
-  it('deletes the item after confirming, then goes to the dashboard', () => {
+  it('deletes the item, then goes to the dashboard', () => {
     const httpMock = TestBed.inject(HttpTestingController);
     const router = TestBed.inject(Router);
     vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     component['deleteItem']();
     const del = httpMock.expectOne({ method: 'DELETE', url: 'http://api.test/api/items/i1' });

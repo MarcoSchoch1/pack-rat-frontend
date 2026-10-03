@@ -23,6 +23,7 @@ export class ItemDetail {
   protected readonly selected = signal(0);
   protected readonly error = signal<string | null>(null);
   protected readonly deleting = signal(false);
+  protected readonly deleteError = signal<string | null>(null);
 
   constructor() {
     this.itemService.get(this.itemId).subscribe({
@@ -51,14 +52,14 @@ export class ItemDetail {
   }
 
   protected deleteItem(): void {
-    if (this.deleting() || !confirm(`Delete "${this.item()?.name}"? This can't be undone.`)) return;
+    if (this.deleting()) return;
     this.deleting.set(true);
-    this.error.set(null);
+    this.deleteError.set(null);
     this.itemService.delete(this.itemId).subscribe({
       next: () => void this.router.navigateByUrl('/'),
       error: () => {
         this.deleting.set(false);
-        this.error.set('Deleting the item failed, try again');
+        this.deleteError.set('Deleting the item failed, try again');
       },
     });
   }
