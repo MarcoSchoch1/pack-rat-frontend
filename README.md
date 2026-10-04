@@ -59,16 +59,38 @@ The backend URL is set per build in `src/environments/`:
 
 ```
 src/app/
+├── login/                    Login screen
+├── create-collection/        First-login screen to name the collection
+├── dashboard/                Collection overview with item tiles and totals
+├── add-item/                 Add and edit item form with picture upload
+├── item-detail/              Item view: pictures (up to 4), edit, delete
+├── confirm-dialog/           Reusable native <dialog> for "are you sure?"
 ├── interceptor/
 │   └── auth.interceptor.ts   Attaches the JWT, logs out on 401
 ├── service/
 │   ├── apiservice.ts         Single entry point for backend calls
-│   └── auth.service.ts       Login, logout, token storage
+│   ├── auth.service.ts       Login, logout, token storage
+│   ├── auth-guard.ts         Redirects to /login without a valid token
+│   ├── collection.service.ts Collections endpoints
+│   └── item.service.ts       Items and images endpoints
 ├── testing/
 │   └── fake-jwt.ts           Test helper for building JWTs
 ├── app.config.ts             Providers: router, HttpClient, interceptors
 └── app.routes.ts             Route definitions
 ```
+
+### Routes
+
+| Path | Screen |
+|---|---|
+| `/login` | Login (public) |
+| `/` | Dashboard |
+| `/collections/new` | Create collection |
+| `/items/new` | Add item |
+| `/items/:id` | Item detail |
+| `/items/:id/edit` | Edit item |
+
+Everything except `/login` is protected by `authGuard`. Unknown paths redirect to `/`.
 
 ### Backend communication
 
@@ -115,10 +137,11 @@ Specs sit next to the code they test (`*.spec.ts`). HTTP behavior is tested with
 
 ## Status
 
-Early development. The HTTP and authentication foundation is in place. Screens ([UI design](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/frontend/ui-design.md)) are next:
+MVP screens from the [UI design](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/frontend/ui-design.md) are in place:
 
 - [x] API service, JWT authentication, error handling
-- [ ] Login
-- [ ] Collection dashboard
-- [ ] Add item form with image upload
-- [ ] Item detail
+- [x] Login
+- [x] Create collection on first login
+- [x] Collection dashboard
+- [x] Add and edit item form with image upload
+- [x] Item detail with image management and delete
