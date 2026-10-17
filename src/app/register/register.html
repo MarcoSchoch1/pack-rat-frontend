@@ -1,0 +1,116 @@
+<main class="flex min-h-screen items-center justify-center bg-base p-4">
+  @switch (invite()) {
+    @case ('valid') {
+      <form
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        class="w-full max-w-xs rounded-2xl border border-line bg-surface shadow-card p-7"
+      >
+        <div class="mb-6 flex flex-col items-center">
+          <div
+            class="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft text-2xl text-brand"
+            aria-hidden="true"
+          >
+            ☰
+          </div>
+          <h1 class="text-lg font-bold text-ink">Join Pack-Rat</h1>
+          <p class="text-sm text-ink-muted">Create your account</p>
+        </div>
+
+        @let username = form.controls.username;
+        <label for="username" class="mb-1 block text-sm text-ink-secondary">Username</label>
+        <input
+          id="username"
+          formControlName="username"
+          type="text"
+          autocomplete="username"
+          [attr.aria-invalid]="username.touched && username.invalid"
+          aria-describedby="username-error"
+          class="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          [class.border-red-500]="username.touched && username.invalid"
+        />
+        <p id="username-error" class="mt-1 mb-4 min-h-5 text-sm text-red-600">
+          @if (username.hasError('taken')) {
+            Username already taken
+          } @else if (username.touched && username.invalid) {
+            Username must be 3–32 characters
+          }
+        </p>
+
+        @let password = form.controls.password;
+        <label for="password" class="mb-1 block text-sm text-ink-secondary">Password</label>
+        <input
+          id="password"
+          formControlName="password"
+          type="password"
+          autocomplete="new-password"
+          [attr.aria-invalid]="password.touched && password.invalid"
+          aria-describedby="password-hint"
+          class="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          [class.border-red-500]="password.touched && password.invalid"
+        />
+        <p
+          id="password-hint"
+          class="mt-1 mb-4 text-sm"
+          [class]="password.touched && password.invalid ? 'text-red-600' : 'text-ink-muted'"
+        >
+          At least 8 characters
+        </p>
+
+        @let confirmPassword = form.controls.confirmPassword;
+        @let confirmInvalid =
+          confirmPassword.touched && (confirmPassword.invalid || form.hasError('passwordMismatch'));
+        <label for="confirm-password" class="mb-1 block text-sm text-ink-secondary"
+          >Confirm password</label
+        >
+        <input
+          id="confirm-password"
+          formControlName="confirmPassword"
+          type="password"
+          autocomplete="new-password"
+          [attr.aria-invalid]="confirmInvalid"
+          aria-describedby="confirm-password-error"
+          class="w-full rounded-lg border border-line-strong px-3 py-2 text-sm focus:border-brand focus:outline-none"
+          [class.border-red-500]="confirmInvalid"
+        />
+        <p id="confirm-password-error" class="mt-1 mb-6 min-h-5 text-sm text-red-600">
+          @if (confirmInvalid) {
+            Passwords don't match
+          }
+        </p>
+
+        @if (error()) {
+          <p class="mb-4 text-sm text-red-600" role="alert">{{ error() }}</p>
+        }
+
+        <button
+          type="submit"
+          [disabled]="submitting()"
+          class="w-full rounded-lg bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
+        >
+          Create account
+        </button>
+      </form>
+    }
+    @case ('invalid') {
+      <div
+        class="w-full max-w-xs rounded-2xl border border-line bg-surface shadow-card p-7 text-center"
+        role="alert"
+      >
+        <div
+          class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft text-2xl text-brand"
+          aria-hidden="true"
+        >
+          ☰
+        </div>
+        <h1 class="mb-2 text-lg font-bold text-ink">Invite link not valid</h1>
+        <p class="mb-5 text-sm text-ink-muted">
+          This invite link is invalid or expired. Ask a friend for a new one.
+        </p>
+        <a routerLink="/login" class="text-sm font-semibold text-brand hover:underline"
+          >Go to login</a
+        >
+      </div>
+    }
+  }
+</main>

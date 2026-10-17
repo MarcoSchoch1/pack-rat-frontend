@@ -5,6 +5,8 @@ import { Router, RouterLink } from '@angular/router';
 import { EMPTY, catchError, from, map, mergeMap, switchMap, tap } from 'rxjs';
 import { Collection, CollectionService } from '../service/collection.service';
 import { Currency, Item, ItemService } from '../service/item.service';
+import { InviteDialog } from '../invite-dialog/invite-dialog';
+import { AuthService } from '../service/auth.service';
 
 //fixed rates as of 30. September 2026
 const CHF_PER_UNIT: Record<Currency, number> = { CHF: 1, EUR: 0.94, USD: 0.8 };
@@ -12,7 +14,7 @@ const CHF_PER_UNIT: Record<Currency, number> = { CHF: 1, EUR: 0.94, USD: 0.8 };
 const toChf = (amount: number, currency: Currency) => amount * CHF_PER_UNIT[currency];
 
 @Component({
-  imports: [RouterLink, CurrencyPipe],
+  imports: [RouterLink, CurrencyPipe, InviteDialog],
   selector: 'app-dashboard',
   styleUrl: './dashboard.css',
   templateUrl: './dashboard.html',
@@ -21,6 +23,7 @@ export class Dashboard {
   private readonly collections = inject(CollectionService);
   private readonly itemService = inject(ItemService);
   private readonly router = inject(Router);
+  protected readonly auth = inject(AuthService);
 
   protected readonly collection = signal<Collection | null>(null);
   protected readonly items = signal<Item[]>([]);

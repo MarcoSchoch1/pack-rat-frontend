@@ -5,9 +5,11 @@ import { AddItem } from './add-item/add-item';
 import { ItemDetail } from './item-detail/item-detail';
 import { CreateCollection } from './create-collection/create-collection';
 import { authGuard } from './service/auth-guard';
+import { Register } from './register/register';
 
 export const routes: Routes = [
     { path: 'login', component: Login },
+    { path: 'register', component: Register },
     {
         path: '',
         canActivateChild: [authGuard],

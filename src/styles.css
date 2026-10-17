@@ -1,3 +1,60 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+/* Self-hosted, so no visitor data goes to Google Fonts. */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+/*
+ * Pack-Rat theme. Modelled on tcgheart.com's light theme (soft tinted page, white cards with a
+ * hairline border and a soft shadow, Inter, mono figures), with green instead of its blue.
+ *
+ * Templates use these names, never raw palette colors like slate-* or indigo-*:
+ *   page        bg-base                   text        text-ink, text-ink-secondary, text-ink-muted
+ *   cards       bg-surface, shadow-card   decoration  text-ink-faint (icons, "—", placeholders only)
+ *   tiles       bg-card                   borders     border-line (cards), border-line-strong (inputs)
+ *   primary     bg-brand hover:bg-brand-hover text-white
+ *   brand tint  bg-brand-soft text-brand  focus       focus:border-brand
+ *   prices      font-mono (tabular figures)
+ * Errors and destructive actions stay on Tailwind's red-*.
+ * Every text color passes WCAG AA (4.5:1) on base, surface and card, except ink-faint.
+ */
+@theme {
+  --font-sans: 'Inter Variable', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --color-base: #f1f6f3;
+  --color-surface: #ffffff;
+  --color-card: #f6faf7;
+
+  --color-ink: #0f2a1d;
+  --color-ink-secondary: #46634f;
+  --color-ink-muted: #5c7566;
+  --color-ink-faint: #a3b8ab;
+
+  --color-line: #0f2a1d17;
+  --color-line-strong: #0f2a1d33;
+
+  --color-brand: #16794a;
+  --color-brand-hover: #126b3f;
+  --color-brand-soft: #e8f4ec;
+  --color-brand-line: #16794a40;
+
+  --shadow-card: 0 1px 4px #0f2a1d14, 0 4px 16px #0f2a1d0d;
+  --shadow-card-hover: 0 2px 8px #0f2a1d1a, 0 8px 24px #0f2a1d14;
+  --shadow-modal: 0 8px 40px #0f2a1d1f;
+}
+
+@layer base {
+  body {
+    @apply bg-base font-sans text-ink antialiased;
+  }
+
+  h1,
+  h2 {
+    @apply tracking-tight;
+  }
+}
+
+/* Angular adds these classes itself; submit() marks every field touched so empty required ones light up. */
+.ng-touched.ng-invalid {
+  border-color: var(--color-red-400, #f87171);
+}

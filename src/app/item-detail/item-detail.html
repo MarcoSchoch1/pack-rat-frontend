@@ -1,6 +1,6 @@
-<main class="flex min-h-screen justify-center bg-slate-50 p-4 sm:p-8">
+<main class="flex min-h-screen justify-center bg-base p-4 sm:p-8">
   <div class="w-full max-w-sm">
-    <a routerLink="/" class="mb-4 inline-block text-sm text-slate-500 hover:text-slate-700">
+    <a routerLink="/" class="mb-4 inline-block text-sm text-ink-muted hover:text-ink">
       ← Back to collection
     </a>
 
@@ -9,7 +9,7 @@
     }
 
     @if (item(); as item) {
-      <article class="rounded-2xl border border-slate-200 bg-white p-5">
+      <article class="rounded-2xl border border-line bg-surface shadow-card p-5">
         @if (images()[selected()]; as image) {
           <img
             [src]="itemService.imageUrl(image.id)"
@@ -26,7 +26,7 @@
                 [attr.aria-label]="'Show picture ' + (i + 1)"
                 (click)="selected.set(i)"
                 class="block w-full overflow-hidden rounded-lg border-2"
-                [class.border-indigo-500]="i === selected()"
+                [class.border-brand]="i === selected()"
                 [class.border-transparent]="i !== selected()"
               >
                 <img [src]="itemService.imageUrl(image.id)" alt="" class="aspect-square w-full object-cover" />
@@ -35,7 +35,7 @@
                 type="button"
                 [attr.aria-label]="'Delete picture ' + (i + 1)"
                 (click)="askDelete(pictureDialog, image)"
-                class="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-white/90 text-sm text-slate-600 shadow hover:bg-red-50 hover:text-red-600"
+                class="absolute top-1 right-1 flex size-6 items-center justify-center rounded-full bg-surface/90 text-sm text-ink-secondary shadow hover:bg-red-50 hover:text-red-600"
               >
                 ×
               </button>
@@ -45,7 +45,7 @@
             <label
               for="picture"
               aria-label="Add picture"
-              class="flex aspect-square cursor-pointer items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-xl text-slate-400 hover:border-indigo-400"
+              class="flex aspect-square cursor-pointer items-center justify-center rounded-lg border border-dashed border-line-strong bg-base text-xl text-ink-muted hover:border-brand-line"
             >
               +
               <input
@@ -60,22 +60,22 @@
           }
         </div>
 
-        <h1 class="text-lg font-bold text-slate-900">{{ item.name }}</h1>
+        <h1 class="text-lg font-bold text-ink">{{ item.name }}</h1>
         @if (item.marketPlaceLink) {
           <a
             [href]="item.marketPlaceLink"
             target="_blank"
             rel="noopener"
-            class="text-sm text-indigo-600 hover:underline"
+            class="text-sm text-brand hover:underline"
           >
             View on marketplace ↗
           </a>
         }
 
-        <dl class="mt-4 divide-y divide-slate-100 border-t border-slate-100 text-sm">
+        <dl class="mt-4 divide-y divide-line border-t border-line text-sm">
           <div class="flex justify-between py-2">
-            <dt class="text-slate-500">Price paid</dt>
-            <dd class="font-semibold text-slate-900">
+            <dt class="text-ink-muted">Price paid</dt>
+            <dd class="font-mono font-semibold text-ink">
               @if (item.selfPulled) {
                 Self pulled
               } @else {
@@ -84,29 +84,29 @@
             </dd>
           </div>
           <div class="flex justify-between py-2">
-            <dt class="text-slate-500">Current price</dt>
-            <dd class="font-semibold text-slate-900">
+            <dt class="text-ink-muted">Current price</dt>
+            <dd class="font-mono font-semibold text-ink">
               {{ item.priceNow === null ? '—' : (item.priceNow | currency: item.currency) }}
             </dd>
           </div>
           <div class="flex justify-between py-2">
-            <dt class="text-slate-500">Date acquired</dt>
-            <dd class="font-semibold text-slate-900">{{ item.dateAcquired | date: 'd MMM y' }}</dd>
+            <dt class="text-ink-muted">Date acquired</dt>
+            <dd class="font-semibold text-ink">{{ item.dateAcquired | date: 'd MMM y' }}</dd>
           </div>
           <div class="flex justify-between py-2">
-            <dt class="text-slate-500">Condition</dt>
-            <dd class="font-semibold text-slate-900">{{ conditions[item.condition] }}</dd>
+            <dt class="text-ink-muted">Condition</dt>
+            <dd class="font-semibold text-ink">{{ conditions[item.condition] }}</dd>
           </div>
           <div class="flex justify-between py-2">
-            <dt class="text-slate-500">Added</dt>
-            <dd class="font-semibold text-slate-900">{{ item.createdAt | date: 'd MMM y' }}</dd>
+            <dt class="text-ink-muted">Added</dt>
+            <dd class="font-semibold text-ink">{{ item.createdAt | date: 'd MMM y' }}</dd>
           </div>
         </dl>
 
         <div class="mt-5 flex gap-3">
           <a
             routerLink="edit"
-            class="flex-1 rounded-lg border border-slate-300 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            class="flex-1 rounded-lg border border-line-strong py-2 text-center text-sm font-semibold text-ink-secondary hover:bg-card"
           >
             Edit
           </a>
@@ -127,7 +127,7 @@
         [error]="deleteError()"
         (confirmed)="deleteItem()"
       >
-        <p class="mb-2 font-semibold break-words text-slate-900">{{ item.name }}</p>
+        <p class="mb-2 font-semibold break-words text-ink">{{ item.name }}</p>
         The item and its pictures will be deleted. <br />This can't be undone.
       </app-confirm-dialog>
 

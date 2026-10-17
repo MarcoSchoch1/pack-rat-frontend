@@ -4,12 +4,12 @@
   [attr.aria-labelledby]="titleId"
   (click)="$event.target === dialog && !busy() && close()"
   (cancel)="dismiss($event)"
-  class="m-auto w-[calc(100%+2rem)] max-w-sm rounded-2xl bg-white backdrop:bg-slate-900/40"
+  class="m-auto w-[calc(100%+2rem)] max-w-sm rounded-2xl bg-surface shadow-modal backdrop:bg-ink/40"
 >
   <!-- Padding sits on this div so a click on the dialog element itself can only be the backdrop. -->
   <div class="p-6">
-    <h2 [id]="titleId" class="mb-3 text-center text-lg font-bold text-slate-900">{{ title() }}</h2>
-    <div class="mb-5 text-center text-sm text-slate-600">
+    <h2 [id]="titleId" class="mb-3 text-center text-lg font-bold text-ink">{{ title() }}</h2>
+    <div class="mb-5 text-center text-sm text-ink-secondary">
       <ng-content />
     </div>
     @if (error()) {
@@ -20,7 +20,7 @@
         type="button"
         (click)="close()"
         [disabled]="busy()"
-        class="flex-1 rounded-lg border border-slate-300 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        class="flex-1 rounded-lg border border-line-strong py-2 text-sm font-semibold text-ink-secondary hover:bg-card disabled:opacity-50"
       >
         Cancel
       </button>

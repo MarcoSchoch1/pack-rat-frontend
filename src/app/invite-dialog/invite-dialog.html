@@ -1,0 +1,54 @@
+<!-- Native <dialog>, same as ConfirmDialog: backdrop, focus trap and Escape for free. -->
+<dialog
+  #dialog
+  aria-labelledby="invite-title"
+  (click)="$event.target === dialog && close()"
+  class="m-auto w-[calc(100%-2rem)] max-w-sm rounded-2xl bg-surface shadow-modal backdrop:bg-ink/40"
+>
+  <!-- Padding sits on this div so a click on the dialog element itself can only be the backdrop. -->
+  <div class="p-6">
+    <h2 id="invite-title" class="mb-1 text-center text-lg font-bold text-ink">
+      Invite a friend
+    </h2>
+    <p class="mb-5 text-center text-sm text-ink-muted">
+      Send them this link so they can create their own account.
+    </p>
+
+    @if (error()) {
+      <p class="mb-4 text-sm text-red-600" role="alert">{{ error() }}</p>
+    } @else if (invite(); as invite) {
+      <label for="invite-link" class="sr-only">Invite link</label>
+      <input
+        id="invite-link"
+        type="text"
+        readonly
+        [value]="invite.url"
+        (focus)="$any($event.target).select()"
+        class="mb-2 w-full rounded-lg border border-line-strong bg-base px-3 py-2 text-sm text-ink-secondary"
+      />
+      <p class="mb-5 text-sm text-ink-muted">
+        Valid until {{ invite.expiresAt | date: 'd MMM' }}, works once
+      </p>
+    } @else {
+      <p class="mb-5 text-center text-sm text-ink-muted">Creating invite…</p>
+    }
+
+    <div class="flex gap-3">
+      <button
+        type="button"
+        (click)="close()"
+        class="flex-1 rounded-lg border border-line-strong py-2 text-sm font-semibold text-ink-secondary hover:bg-card"
+      >
+        Close
+      </button>
+      <button
+        type="button"
+        (click)="copy()"
+        [disabled]="!invite()"
+        class="flex-1 rounded-lg bg-brand py-2 text-sm font-semibold text-white hover:bg-brand-hover disabled:opacity-50"
+      >
+        <span aria-live="polite">{{ copied() ? 'Copied ✓' : 'Copy link' }}</span>
+      </button>
+    </div>
+  </div>
+</dialog>

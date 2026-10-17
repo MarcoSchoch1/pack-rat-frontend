@@ -8,6 +8,13 @@ export interface LoginRequest {
   password: string;
 }
 
+/** Mirrors the backend's RegisterRequest (ADR-021). */
+export interface RegisterRequest {
+  inviteToken: string;
+  username: string;
+  password: string;
+}
+
 interface LoginResponse {
   jwtAccessToken: string;
 }
@@ -33,15 +40,24 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<void> {
-    return this.api.post<LoginResponse>('auth/login', credentials).pipe(
-      tap(({ jwtAccessToken }) => this.setToken(jwtAccessToken)),
-      map(() => undefined),
-    );
+    return this.authenticate('auth/login', credentials);
+  }
+
+  /** Creates the account from an invite and logs straight in; the backend answers like login. */
+  register(request: RegisterRequest): Observable<void> {
+    return this.authenticate('auth/register', request);
   }
 
   logout(): void {
     this.setToken(null);
     void this.router.navigate(['/login']);
+  }
+
+  private authenticate(path: string, body: LoginRequest | RegisterRequest): Observable<void> {
+    return this.api.post<LoginResponse>(path, body).pipe(
+      tap(({ jwtAccessToken }) => this.setToken(jwtAccessToken)),
+      map(() => undefined),
+    );
   }
 
   private setToken(token: string | null): void {
