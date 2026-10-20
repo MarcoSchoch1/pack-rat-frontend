@@ -14,6 +14,7 @@ This is one of three repositories:
 
 - **Angular 22**: standalone components, signals, functional interceptors
 - **Tailwind CSS 4** for styling ([ADR-011](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md#adr-011-use-tailwind-css-instead-of-a-component-library-eg-angular-material))
+- **Inter** and **JetBrains Mono**, self-hosted through Fontsource
 - **Vitest** with jsdom for unit tests
 - **Prettier** for formatting
 
@@ -60,11 +61,14 @@ The backend URL is set per build in `src/environments/`:
 ```
 src/app/
 ├── login/                    Login screen
-├── create-collection/        First-login screen to name the collection
-├── dashboard/                Collection overview with item tiles and totals
+├── register/                 Sign-up through an invite link
+├── collections-overview/     Landing screen: lists all collections with totals
+├── create-collection/        Create a collection (first login or "New collection")
+├── dashboard/                One collection with item tiles and totals
 ├── add-item/                 Add and edit item form with picture upload
 ├── item-detail/              Item view: pictures (up to 4), edit, delete
 ├── confirm-dialog/           Reusable native <dialog> for "are you sure?"
+├── invite-dialog/            "Invite a friend" dialog, creates and copies an invite link
 ├── interceptor/
 │   └── auth.interceptor.ts   Attaches the JWT, logs out on 401
 ├── service/
@@ -72,6 +76,7 @@ src/app/
 │   ├── auth.service.ts       Login, logout, token storage
 │   ├── auth-guard.ts         Redirects to /login without a valid token
 │   ├── collection.service.ts Collections endpoints
+│   ├── invite.service.ts     Create and check invites
 │   └── item.service.ts       Items and images endpoints
 ├── testing/
 │   └── fake-jwt.ts           Test helper for building JWTs
@@ -84,13 +89,17 @@ src/app/
 | Path | Screen |
 |---|---|
 | `/login` | Login (public) |
-| `/` | Dashboard |
+| `/register?invite=<token>` | Register (public) |
+| `/` | Collections overview |
 | `/collections/new` | Create collection |
-| `/items/new` | Add item |
+| `/collections/:collectionId` | Dashboard of one collection |
+| `/collections/:collectionId/items/new` | Add item |
 | `/items/:id` | Item detail |
 | `/items/:id/edit` | Edit item |
 
-Everything except `/login` is protected by `authGuard`. Unknown paths redirect to `/`.
+Everything except `/login` and `/register` is protected by `authGuard`. Unknown paths redirect to `/`.
+
+`/` routes by collection count ([ADR-022](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md)): with no collection it opens `/collections/new`, with one it opens that collection's dashboard, and with two or more it shows the overview.
 
 ### Backend communication
 
@@ -113,6 +122,15 @@ The backend issues a stateless JWT on `POST /api/auth/login` ([ADR-007](https://
 - `AuthService` stores the token in `localStorage` and checks its `exp` claim before each use. A token is treated as expired 10 seconds early so it can't expire in transit.
 - `authInterceptor` adds `Authorization: Bearer <token>` to requests aimed at the backend's `apiUrl`. The token is never sent to other hosts.
 - When the backend answers a request that carried a token with 401, the interceptor clears the token and redirects to `/login`.
+- The logout button clears the token and returns to `/login`.
+
+### Invites and registration
+
+Sign-up is invite-only ([ADR-021](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md)).
+
+- A logged-in user opens "Invite a friend", which calls `POST /api/invites` and copies the link to the clipboard. Every invite is single-use and valid for 7 days.
+- `/register?invite=<token>` first checks the token with `GET /api/invites/{token}` and shows only a dead-link message if it is unknown, used or expired.
+- `POST /api/auth/register` answers like login, so the new user is logged in right away and sent to `/collections/new`.
 
 **Known trade-offs:**
 
@@ -133,6 +151,7 @@ Specs sit next to the code they test (`*.spec.ts`). HTTP behavior is tested with
 
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and reference the issue number, e.g. `feat: add item form #5`.
 - Formatting is handled by Prettier (`.prettierrc`: 100 columns, single quotes).
+- Templates use the semantic theme colors defined in `src/styles.css` (`bg-surface`, `text-ink`, `bg-brand`, …), never raw Tailwind palette colors. Errors and destructive actions use `red-*`.
 - New issues are added to the [project board](https://github.com/users/MarcoSchoch1/projects/1) automatically by `.github/workflows/add-to-project.yml`.
 
 ## Status
@@ -140,8 +159,9 @@ Specs sit next to the code they test (`*.spec.ts`). HTTP behavior is tested with
 MVP screens from the [UI design](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/frontend/ui-design.md) are in place:
 
 - [x] API service, JWT authentication, error handling
-- [x] Login
+- [x] Login, logout and invite-only registration
 - [x] Create collection on first login
+- [x] Multiple collections with an overview
 - [x] Collection dashboard
 - [x] Add and edit item form with image upload
 - [x] Item detail with image management and delete
