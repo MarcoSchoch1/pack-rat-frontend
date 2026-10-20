@@ -31,5 +31,11 @@
     >
       Create collection
     </button>
+
+    @if (from) {
+      <a [routerLink]="from" class="mt-3 block text-center text-sm text-ink-muted hover:text-ink">
+        Cancel
+      </a>
+    }
   </form>
 </main>

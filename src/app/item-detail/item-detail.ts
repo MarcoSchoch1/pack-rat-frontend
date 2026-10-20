@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ConfirmDialog } from '../confirm-dialog/confirm-dialog';
@@ -25,6 +25,10 @@ export class ItemDetail {
   protected readonly maxPictures = MAX_PICTURES;
   protected readonly item = signal<Item | null>(null);
   protected readonly images = signal<Image[]>([]);
+  protected readonly collectionUrl = computed(() => {
+    const item = this.item();
+    return item ? `/collections/${item.collectionId}` : '/';
+  });
   protected readonly selected = signal(0);
   protected readonly error = signal<string | null>(null);
   /** Shared by the item and picture dialogs; only one is open at a time. */
@@ -89,7 +93,7 @@ export class ItemDetail {
     this.deleting.set(true);
     this.deleteError.set(null);
     this.itemService.delete(this.itemId).subscribe({
-      next: () => void this.router.navigateByUrl('/'),
+      next: () => void this.router.navigateByUrl(this.collectionUrl()),
       error: () => {
         this.deleting.set(false);
         this.deleteError.set('Deleting the item failed, try again');

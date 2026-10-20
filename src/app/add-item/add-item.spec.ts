@@ -20,6 +20,10 @@ describe('AddItem', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: API_BASE_URL, useValue: BASE_URL },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ collectionId: 'c1' }) } },
+        },
       ],
     });
     httpMock = TestBed.inject(HttpTestingController);
@@ -45,7 +49,6 @@ describe('AddItem', () => {
       new File(['x'], 'luffy.png', { type: 'image/png' }),
     ] as unknown as FileList);
     component.submit();
-    httpMock.expectOne(`${BASE_URL}/collections`).flush([{ id: 'c1' }]);
     const create = httpMock.expectOne(`${BASE_URL}/collections/c1/items`);
     expect(create.request.body).toEqual({
       name: 'Luffy Alt Art',
@@ -60,13 +63,13 @@ describe('AddItem', () => {
     create.flush({ id: 'i1' });
   }
 
-  it('creates the item, uploads the picture, then goes to the dashboard', () => {
+  it('creates the item in the collection from the URL, uploads the picture, then goes to its dashboard', () => {
     saveWithPicture();
     const upload = httpMock.expectOne(`${BASE_URL}/items/i1/images`);
     expect((upload.request.body as FormData).get('file')).toBeInstanceOf(File);
     upload.flush({ id: 'img1' });
 
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/collections/c1');
   });
 
   it('goes to the saved item when only the picture upload fails', () => {
@@ -82,7 +85,7 @@ describe('AddItem', () => {
     component['form'].controls.name.setValue('');
     component.submit();
 
-    httpMock.expectNone(`${BASE_URL}/collections`);
+    httpMock.expectNone(`${BASE_URL}/collections/c1/items`);
     expect(component['form'].controls.name.touched).toBe(true);
   });
 });

@@ -4,6 +4,11 @@
   }
 
   @if (collection(); as collection) {
+    @if (hasOverview()) {
+      <a routerLink="/" class="mb-4 inline-block text-sm text-ink-muted hover:text-ink">
+        ← All collections
+      </a>
+    }
     <header class="mb-6 flex items-start justify-between">
       <div>
         <p class="text-sm text-ink-muted">Collection</p>
@@ -25,7 +30,14 @@
           Invite a friend
         </button>
         <a
-          routerLink="/items/new"
+          routerLink="/collections/new"
+          [queryParams]="{ from: '/collections/' + collection.id }"
+          class="rounded-lg border border-line-strong px-4 py-2 text-sm font-semibold text-ink-secondary hover:bg-card"
+        >
+          + New collection
+        </a>
+        <a
+          [routerLink]="['/collections', collection.id, 'items', 'new']"
           class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover"
         >
           + Add item

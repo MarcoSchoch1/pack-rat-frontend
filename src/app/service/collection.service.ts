@@ -7,6 +7,7 @@ export interface Collection {
   id: string;
   userId: string;
   name: string;
+  itemCount: number;
   totalPricePaid: number | null;
   totalPriceNow: number | null;
 }
@@ -19,7 +20,7 @@ export interface CollectionRequest {
 export class CollectionService {
   private readonly api = inject(ApiService);
 
-  /** The current user's collections. MVP: empty until they create one, then exactly one. */
+  /** The current user's collections, each with its item count and totals (ADR-022). */
   list(): Observable<Collection[]> {
     return this.api.get<Collection[]>('collections');
   }

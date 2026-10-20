@@ -3,7 +3,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
-import { CollectionService } from '../service/collection.service';
 import { CONDITIONS, CURRENCIES, Condition, Currency, ItemService } from '../service/item.service';
 
 /** Same limit as the backend's spring.servlet.multipart.max-file-size. */
@@ -16,12 +15,14 @@ const MAX_PICTURE_BYTES = 5 * 1024 * 1024;
   templateUrl: './add-item.html',
 })
 export class AddItem {
-  private readonly collections = inject(CollectionService);
   private readonly items = inject(ItemService);
   private readonly router = inject(Router);
 
+  private readonly params = inject(ActivatedRoute).snapshot.paramMap;
   /** Set on `items/:id/edit`; the same form then edits that item instead of adding one. */
-  protected readonly itemId = inject(ActivatedRoute).snapshot.paramMap.get('id');
+  protected readonly itemId = this.params.get('id');
+  /** Set on `collections/:collectionId/items/new`. */
+  protected readonly collectionId = this.params.get('collectionId');
 
   protected readonly currencies = CURRENCIES;
   protected readonly conditions = Object.entries(CONDITIONS) as [Condition, string][];
@@ -91,8 +92,8 @@ export class AddItem {
     const itemId = this.itemId;
     const save = itemId
       ? this.items.update(itemId, request)
-      : this.collections.list().pipe(switchMap(([collection]) => this.items.create(collection.id, request)));
-    const done = itemId ? `/items/${itemId}` : '/';
+      : this.items.create(this.collectionId!, request);
+    const done = itemId ? `/items/${itemId}` : `/collections/${this.collectionId}`;
 
     save
       .pipe(

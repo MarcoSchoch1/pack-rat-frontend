@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { API_BASE_URL } from '../service/apiservice';
 import { Dashboard } from './dashboard';
 
@@ -18,6 +18,10 @@ describe('Dashboard', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: API_BASE_URL, useValue: BASE_URL },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ collectionId: 'c1' }) } },
+        },
       ],
     });
     httpMock = TestBed.inject(HttpTestingController);
@@ -35,7 +39,7 @@ describe('Dashboard', () => {
       totalPriceNow: null,
     };
 
-    httpMock.expectOne(`${BASE_URL}/collections`).flush([collection]);
+    httpMock.expectOne(`${BASE_URL}/collections`).flush([collection, { ...collection, id: 'c2' }]);
     httpMock.expectOne(`${BASE_URL}/collections/c1/items`).flush([
       { id: 'i1', name: 'Luffy Alt Art', pricePaid: 45, priceNow: null, currency: 'CHF' },
       { id: 'i2', name: 'Zoro OP04', pricePaid: 100, priceNow: 200, currency: 'EUR' },
@@ -55,14 +59,15 @@ describe('Dashboard', () => {
     expect(text).toContain('CHF139.00');
     expect(text).toContain('CHF188.00');
     expect(text).toContain('2 items');
+    expect(text).toContain('All collections');
   });
 
-  it('sends users without a collection to create one', () => {
+  it('sends users to the overview when the collection does not exist', () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     TestBed.createComponent(Dashboard);
 
     httpMock.expectOne(`${BASE_URL}/collections`).flush([]);
 
-    expect(navigate).toHaveBeenCalledWith('/collections/new');
+    expect(navigate).toHaveBeenCalledWith('/', { replaceUrl: true });
   });
 });

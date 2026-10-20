@@ -26,7 +26,7 @@ describe('CollectionService', () => {
 
   it('lists the current user collections', () => {
     const collections: Collection[] = [
-      { id: 'c1', userId: 'u1', name: 'One Piece', totalPricePaid: 45, totalPriceNow: null },
+      { id: 'c1', userId: 'u1', name: 'One Piece', itemCount: 1, totalPricePaid: 45, totalPriceNow: null },
     ];
     let result: Collection[] | undefined;
 

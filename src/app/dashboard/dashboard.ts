@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CurrencyPipe } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EMPTY, catchError, from, map, mergeMap, switchMap, tap } from 'rxjs';
 import { Collection, CollectionService } from '../service/collection.service';
 import { Currency, Item, ItemService } from '../service/item.service';
@@ -25,7 +25,11 @@ export class Dashboard {
   private readonly router = inject(Router);
   protected readonly auth = inject(AuthService);
 
+  private readonly collectionId = inject(ActivatedRoute).snapshot.paramMap.get('collectionId');
+
   protected readonly collection = signal<Collection | null>(null);
+  /** The "← All collections" link only makes sense once there is an overview to go back to. */
+  protected readonly hasOverview = signal(false);
   protected readonly items = signal<Item[]>([]);
   /** Item id → URL of its first picture. Items without one are missing and show the placeholder. */
   protected readonly thumbnails = signal<Record<string, string>>({});
@@ -47,12 +51,14 @@ export class Dashboard {
     this.collections
       .list()
       .pipe(
-        switchMap(([collection]) => {
-          // Also catches returning users who skip the login screen and have no collection yet.
+        switchMap((collections) => {
+          const collection = collections.find((c) => c.id === this.collectionId);
+          // Unknown or deleted collection: the overview routes the user to one that exists.
           if (!collection) {
-            void this.router.navigateByUrl('/collections/new');
+            void this.router.navigateByUrl('/', { replaceUrl: true });
             return EMPTY;
           }
+          this.hasOverview.set(collections.length > 1);
           return this.itemService
             .listByCollection(collection.id)
             .pipe(map((items) => ({ collection, items })));

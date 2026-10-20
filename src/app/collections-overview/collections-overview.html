@@ -1,0 +1,93 @@
+<main class="mx-auto max-w-4xl p-8">
+  @if (error()) {
+    <p class="text-sm text-red-600" role="alert">{{ error() }}</p>
+  }
+
+  @if (collections().length > 0) {
+    <header class="mb-6 flex items-start justify-between">
+      <div>
+        <p class="text-sm text-ink-muted">Overview</p>
+        <h1 class="text-2xl font-bold text-ink">My collections</h1>
+      </div>
+      <div class="flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          (click)="auth.logout()"
+          class="rounded-lg px-4 py-2 text-sm font-semibold text-ink-muted hover:bg-card hover:text-ink"
+        >
+          Log out
+        </button>
+        <button
+          type="button"
+          (click)="inviteDialog.open()"
+          class="rounded-lg border border-line-strong px-4 py-2 text-sm font-semibold text-ink-secondary hover:bg-card"
+        >
+          Invite a friend
+        </button>
+        <a
+          routerLink="/collections/new"
+          [queryParams]="{ from: '/' }"
+          class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-hover"
+        >
+          + New collection
+        </a>
+      </div>
+    </header>
+
+    <app-invite-dialog #inviteDialog />
+
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div class="rounded-xl border border-line bg-card p-4">
+        <p class="text-sm text-ink-muted">Total price paid</p>
+        <p class="font-mono text-2xl font-bold text-ink">
+          {{ totalPricePaid() | currency: 'CHF' }}
+        </p>
+      </div>
+      <div class="rounded-xl border border-line bg-card p-4">
+        <p class="text-sm text-ink-muted">Total price now</p>
+        @if (totalPriceNow() !== null) {
+          <p class="font-mono text-2xl font-bold text-ink">
+            {{ totalPriceNow() | currency: 'CHF' }}
+          </p>
+        } @else {
+          <p class="font-mono text-2xl font-bold text-ink-faint">—</p>
+        }
+      </div>
+    </section>
+    <p class="mt-2 mb-8 text-xs text-ink-muted">
+      Totals across all collections, added without currency conversion
+    </p>
+
+    <p class="mb-3 text-sm text-ink-muted">{{ collections().length }} collections</p>
+
+    <ul class="grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2">
+      @for (collection of collections(); track collection.id) {
+        <li>
+          <a
+            [routerLink]="['/collections', collection.id]"
+            class="flex h-full flex-col rounded-xl border border-line bg-surface p-4 shadow-card transition-shadow hover:border-brand-line hover:shadow-card-hover"
+          >
+            <p class="font-bold text-ink">{{ collection.name }}</p>
+            <p class="text-sm text-ink-muted">{{ collection.itemCount }} items</p>
+            <dl class="mt-auto grid grid-cols-2 pt-4 text-sm">
+              <div>
+                <dt class="text-xs text-ink-muted">Price paid</dt>
+                <dd class="font-mono text-ink">
+                  {{ collection.totalPricePaid ?? 0 | currency: 'CHF' }}
+                </dd>
+              </div>
+              <div class="text-right">
+                <dt class="text-xs text-ink-muted">Price now</dt>
+                @if (collection.totalPriceNow !== null) {
+                  <dd class="font-mono text-ink">{{ collection.totalPriceNow | currency: 'CHF' }}</dd>
+                } @else {
+                  <dd class="font-mono text-ink-faint">—</dd>
+                }
+              </div>
+            </dl>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</main>

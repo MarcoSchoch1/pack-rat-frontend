@@ -142,7 +142,7 @@
 
     <div class="flex gap-3">
       <a
-        [routerLink]="itemId ? ['/items', itemId] : '/'"
+        [routerLink]="itemId ? ['/items', itemId] : ['/collections', collectionId]"
         class="flex-1 rounded-lg border border-line-strong py-2 text-center text-sm font-semibold text-ink-secondary hover:bg-card"
       >
         Cancel
