@@ -70,16 +70,14 @@ src/app/
 ├── confirm-dialog/           Reusable native <dialog> for "are you sure?"
 ├── invite-dialog/            "Invite a friend" dialog, creates and copies an invite link
 ├── interceptor/
-│   └── auth.interceptor.ts   Attaches the JWT, logs out on 401
+│   └── auth.interceptor.ts   Sends the auth cookie, logs out on 401
 ├── service/
 │   ├── apiservice.ts         Single entry point for backend calls
-│   ├── auth.service.ts       Login, logout, token storage
-│   ├── auth-guard.ts         Redirects to /login without a valid token
+│   ├── auth.service.ts       Login, logout, session expiry
+│   ├── auth-guard.ts         Redirects to /login without a live session
 │   ├── collection.service.ts Collections endpoints
 │   ├── invite.service.ts     Create and check invites
 │   └── item.service.ts       Items and images endpoints
-├── testing/
-│   └── fake-jwt.ts           Test helper for building JWTs
 ├── app.config.ts             Providers: router, HttpClient, interceptors
 └── app.routes.ts             Route definitions
 ```
@@ -117,12 +115,12 @@ collections$ = this.api.get<Collection[]>('collections');
 
 ### Authentication
 
-The backend issues a stateless JWT on `POST /api/auth/login` ([ADR-007](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md#adr-007-jwt-for-authentication-instead-of-server-side-sessions)).
+The backend issues a stateless JWT on `POST /api/auth/login` ([ADR-007](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md#adr-007-jwt-for-authentication-instead-of-server-side-sessions)) and puts it in an httpOnly cookie ([ADR-019](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md)). The frontend never sees the token.
 
-- `AuthService` stores the token in `localStorage` and checks its `exp` claim before each use. A token is treated as expired 10 seconds early so it can't expire in transit.
-- `authInterceptor` adds `Authorization: Bearer <token>` to requests aimed at the backend's `apiUrl`. The token is never sent to other hosts.
-- When the backend answers a request that carried a token with 401, the interceptor clears the token and redirects to `/login`.
-- The logout button clears the token and returns to `/login`.
+- `AuthService` keeps only the `expiresAt` from the login/register response in `localStorage`. The user counts as logged in while it lies in the future (minus 10 seconds, so the cookie can't expire in transit).
+- `authInterceptor` sets `withCredentials` on requests aimed at the backend's `apiUrl`, so the browser sends the cookie. Other hosts never get credentials.
+- Any 401 from the backend clears `expiresAt` and redirects to `/login`.
+- The logout button calls `POST /api/auth/logout` (which deletes the cookie), clears `expiresAt` and returns to `/login`.
 
 ### Invites and registration
 
@@ -134,7 +132,6 @@ Sign-up is invite-only ([ADR-021](https://github.com/MarcoSchoch1/pack-rat-docs/
 
 **Known trade-offs:**
 
-- A token in `localStorage` can be read by any script that runs on the page, so an XSS vulnerability would expose it. An httpOnly cookie would avoid this but requires a different backend auth design.
 - There is no refresh token. Sessions end when the token expires (1 hour), and the user logs in again.
 
 ## Testing

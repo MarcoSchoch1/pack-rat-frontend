@@ -1,6 +1,6 @@
 import { Service, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, map, tap } from 'rxjs';
+import { Observable, finalize, map, tap } from 'rxjs';
 import { ApiService } from './apiservice';
 
 export interface LoginRequest {
@@ -15,28 +15,26 @@ export interface RegisterRequest {
   password: string;
 }
 
+/** The JWT itself travels in an httpOnly cookie; the body only says when it dies (ADR-019). */
 interface LoginResponse {
-  jwtAccessToken: string;
+  expiresAt: string;
 }
 
-const TOKEN_STORAGE_KEY = 'packrat.accessToken';
-// Treat tokens as expired slightly early so a request never leaves with a token that dies in transit.
+const EXPIRES_AT_STORAGE_KEY = 'packrat.expiresAt';
+// Left behind by the pre-cookie version, which kept the JWT in localStorage.
+const LEGACY_TOKEN_STORAGE_KEY = 'packrat.accessToken';
+// Treat the session as over slightly early so a request never leaves with a cookie that dies in transit.
 const EXPIRY_LEEWAY_MS = 10_000;
 
 @Service()
 export class AuthService {
   private readonly api = inject(ApiService);
   private readonly router = inject(Router);
-  private readonly token = signal<string | null>(readStoredToken());
-
-  /** The stored JWT if it has not expired, otherwise null. */
-  accessToken(): string | null {
-    const token = this.token();
-    return token !== null && !isExpired(token) ? token : null;
-  }
+  private readonly expiresAt = signal<number | null>(readStoredExpiry());
 
   isAuthenticated(): boolean {
-    return this.accessToken() !== null;
+    const expiresAt = this.expiresAt();
+    return expiresAt !== null && expiresAt - EXPIRY_LEEWAY_MS > Date.now();
   }
 
   login(credentials: LoginRequest): Observable<void> {
@@ -48,47 +46,47 @@ export class AuthService {
     return this.authenticate('auth/register', request);
   }
 
+  /** Asks the backend to drop the cookie; the local session ends even if that call fails. */
   logout(): void {
-    this.setToken(null);
+    this.api
+      .post<void>('auth/logout', null)
+      .pipe(finalize(() => this.endSession()))
+      .subscribe({ error: () => {} });
+  }
+
+  /** Forgets the session locally, e.g. after a 401 when the cookie is already dead. */
+  endSession(): void {
+    this.setExpiresAt(null);
     void this.router.navigate(['/login']);
   }
 
   private authenticate(path: string, body: LoginRequest | RegisterRequest): Observable<void> {
     return this.api.post<LoginResponse>(path, body).pipe(
-      tap(({ jwtAccessToken }) => this.setToken(jwtAccessToken)),
+      tap(({ expiresAt }) => this.setExpiresAt(Date.parse(expiresAt))),
       map(() => undefined),
     );
   }
 
-  private setToken(token: string | null): void {
-    this.token.set(token);
+  private setExpiresAt(expiresAt: number | null): void {
+    this.expiresAt.set(expiresAt);
     try {
-      if (token === null) {
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
+      if (expiresAt === null) {
+        localStorage.removeItem(EXPIRES_AT_STORAGE_KEY);
       } else {
-        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+        localStorage.setItem(EXPIRES_AT_STORAGE_KEY, String(expiresAt));
       }
     } catch {
-      // Storage blocked (e.g. privacy mode): the token still lives in memory for this tab.
+      // Storage blocked (e.g. privacy mode): the session still lives in memory for this tab.
     }
   }
 }
 
-function readStoredToken(): string | null {
+function readStoredExpiry(): number | null {
   try {
-    return localStorage.getItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
+    const stored = Number(localStorage.getItem(EXPIRES_AT_STORAGE_KEY));
+    return stored > 0 ? stored : null;
   } catch {
     return null;
-  }
-}
-
-/** Reads the `exp` claim. The signature is the backend's job; this only avoids sending dead tokens. */
-function isExpired(token: string): boolean {
-  try {
-    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const { exp } = JSON.parse(atob(payload)) as { exp?: unknown };
-    return typeof exp !== 'number' || exp * 1000 - EXPIRY_LEEWAY_MS <= Date.now();
-  } catch {
-    return true;
   }
 }

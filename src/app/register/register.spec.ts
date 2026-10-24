@@ -2,7 +2,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { fakeJwt } from '../testing/fake-jwt';
 import { API_BASE_URL } from '../service/apiservice';
 import { Register } from './register';
 
@@ -110,7 +109,7 @@ describe('Register', () => {
       username: 'zoro',
       password: 'at-least-8',
     });
-    req.flush({ jwtAccessToken: fakeJwt({ exp: Date.now() / 1000 + 3600 }) });
+    req.flush({ expiresAt: new Date(Date.now() + 3_600_000).toISOString() });
 
     expect(navigate).toHaveBeenCalledWith('/collections/new');
   });
