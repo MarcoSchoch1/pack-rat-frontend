@@ -52,9 +52,9 @@ The backend URL is set per build in `src/environments/`:
 | File | Used by | `apiUrl` |
 |---|---|---|
 | `environment.development.ts` | `ng serve`, development builds | `http://localhost:8080/api` |
-| `environment.ts` | Production builds | Deployed backend URL |
+| `environment.ts` | Production builds (`ng build`, Docker image) | `/api` (relative) |
 
-`angular.json` swaps the development file in through `fileReplacements`. No secrets belong in these files, since everything in them ships to the browser.
+`angular.json` swaps the development file in through `fileReplacements`. Production uses a relative `/api` so one image works under any hostname: Nginx in the image proxies `/api` to the backend, which makes the calls same-origin ([ADR-025](https://github.com/MarcoSchoch1/pack-rat-docs/blob/main/adr/adr.md)). No secrets belong in these files, since everything in them ships to the browser.
 
 ## Architecture
 
